@@ -40,8 +40,7 @@ using namespace MatrixWrapper;
 using namespace BFL;
 using namespace tf2;
 using namespace std;
-using namespace ros;
-
+using namespace rclcpp;
 
 namespace estimation
 {
@@ -166,7 +165,7 @@ namespace estimation
     filter_ = new ExtendedKalmanFilter(prior_);
 
     // remember prior
-    geometry_msgs::TransformStamped T;
+    geometry_msgs::msg::TransformStamped T;
     
     T.child_frame_id = hidden_output_frame_;
     T.header.frame_id = base_footprint_frame_;
@@ -190,22 +189,22 @@ namespace estimation
     // only update filter when it is initialized
     if (!filter_initialized_)
     {
-      ROS_INFO("Cannot update filter when filter was not initialized first.");
+      // RCLCPP_INFO("Cannot update filter when filter was not initialized first.");
       return false;
     }
 
     // only update filter for time later than current filter time
-    double dt = (filter_time - filter_time_old_).toSec();
+    double dt = (filter_time - filter_time_old_).seconds();
     if (dt == 0) 
     {
       return false;
     }
     if (dt <  0)
     {
-      ROS_INFO("Will not update robot pose with time %f sec in the past.", dt);
+      // RCLCPP_INFO("Will not update robot pose with time %f sec in the past.", dt);
       return false;
     }
-    ROS_DEBUG("Update filter at time %f with dt %f", filter_time.toSec(), dt);
+    // RCLCPP_DEBUG("Update filter at time %f with dt %f", filter_time.toSec(), dt);
 
 
     // system update filter
@@ -217,12 +216,12 @@ namespace estimation
     
     // process odom measurement
     // ------------------------
-    ROS_DEBUG("Process odom meas");
+    // RCLCPP_DEBUG("Process odom meas");
     if (odom_active)
     {
       if (!tf_buffer_->canTransform(base_footprint_frame_, hidden_odom_frame_, filter_time))
       {
-        ROS_ERROR("filter time older than odom message buffer");
+        // RCLCPP_ERROR("filter time older than odom message buffer");
         return false;
       }
       try {
@@ -249,8 +248,8 @@ namespace estimation
         // update filter
         odom_meas_pdf_->AdditiveNoiseSigmaSet(odom_covariance_ * pow(dt,2));
 
-        ROS_DEBUG("Update filter with odom measurement %f %f %f %f %f %f", 
-                  odom_rel(1), odom_rel(2), odom_rel(3), odom_rel(4), odom_rel(5), odom_rel(6));
+        // RCLCPP_DEBUG("Update filter with odom measurement %f %f %f %f %f %f", 
+        //          odom_rel(1), odom_rel(2), odom_rel(3), odom_rel(4), odom_rel(5), odom_rel(6));
         filter_->Update(odom_meas_model_, odom_rel);
         diagnostics_odom_rot_rel_ = odom_rel(6);
       }
@@ -272,7 +271,7 @@ namespace estimation
     {
       if (!tf_buffer_->canTransform(base_footprint_frame_, hidden_imu_frame_, filter_time))
       {
-        ROS_ERROR("filter time older than imu message buffer");
+        // RCLCPP_ERROR("filter time older than imu message buffer");
         return false;
       }
       try {
@@ -321,7 +320,7 @@ namespace estimation
     {
       if (!tf_buffer_->canTransform(base_footprint_frame_, hidden_vo_frame_, filter_time))
       {
-        ROS_ERROR("filter time older than vo message buffer");
+        // RCLCPP_ERROR("filter time older than vo message buffer");
         return false;
       }
       try {
@@ -367,7 +366,7 @@ namespace estimation
     {
       if (!tf_buffer_->canTransform(base_footprint_frame_, hidden_gps_frame_, filter_time))
       {
-        ROS_ERROR("filter time older than gps message buffer");
+        // RCLCPP_ERROR("filter time older than gps message buffer");
         return false;
       }
       try
@@ -408,7 +407,7 @@ namespace estimation
     filter_time_old_ = filter_time;
 
 
-    geometry_msgs::TransformStamped T;
+    geometry_msgs::msg::TransformStamped T;
     
     T.child_frame_id = hidden_output_frame_;
     T.header.frame_id = base_footprint_frame_;
@@ -433,24 +432,24 @@ namespace estimation
   }
 
   void OdomEstimation::addMeasurement(
-    const geometry_msgs::TransformStamped& meas)
+    const geometry_msgs::msg::TransformStamped& meas)
   {
-    ROS_DEBUG_STREAM("AddMeasurement from " << meas.header.frame_id << " to " << meas.child_frame_id << " (T=" << meas.header.stamp << "): "
-       << " [" << meas.transform.translation.x << ", " << meas.transform.translation.y << ", " << meas.transform.translation.z << "]v"
-       << " [" << meas.transform.rotation.x << ", " << meas.transform.rotation.y << ", " << meas.transform.rotation.z << ", " << meas.transform.rotation.w << "]q");
+    // RCLCPP_DEBUG_STREAM("AddMeasurement from " << meas.header.frame_id << " to " << meas.child_frame_id << " (T=" << meas.header.stamp << "): "
+    //   << " [" << meas.transform.translation.x << ", " << meas.transform.translation.y << ", " << meas.transform.translation.z << "]v"
+    //   << " [" << meas.transform.rotation.x << ", " << meas.transform.rotation.y << ", " << meas.transform.rotation.z << ", " << meas.transform.rotation.w << "]q");
     
     tf_buffer_->setTransform( meas, "default_authority" );
   }
 
   void OdomEstimation::addMeasurement(
-    const geometry_msgs::TransformStamped& meas, const MatrixWrapper::SymmetricMatrix& covar)
+    const geometry_msgs::msg::TransformStamped& meas, const MatrixWrapper::SymmetricMatrix& covar)
   {
     // check covariance
     for(unsigned int i=0; i<covar.rows(); i++)
     {
       if (covar(i+1,i+1) == 0)
       {
-        ROS_ERROR("Covariance specified for measurement on topic %s is zero", meas.child_frame_id.c_str());
+        // RCLCPP_ERROR("Covariance specified for measurement on topic %s is zero", meas.child_frame_id.c_str());
         return;
       }
     }
@@ -460,7 +459,7 @@ namespace estimation
     else if (meas.child_frame_id == hidden_imu_frame_)  imu_covariance_  = covar;
     else if (meas.child_frame_id == hidden_vo_frame_)   vo_covariance_   = covar;
     else if (meas.child_frame_id == hidden_gps_frame_)  gps_covariance_  = covar;
-    else ROS_ERROR("Adding a measurement for an unknown sensor %s", meas.child_frame_id.c_str());
+    //else // RCLCPP_ERROR("Adding a measurement for an unknown sensor %s", meas.child_frame_id.c_str());
   }
 
 
@@ -473,10 +472,10 @@ namespace estimation
   // get filter posterior at time 'time' as Transform
   void OdomEstimation::getEstimate(Time time, Transform& estimate)
   {
-    geometry_msgs::TransformStamped tmp;
+    geometry_msgs::msg::TransformStamped tmp;
     if (!tf_buffer_->canTransform(base_footprint_frame_, hidden_output_frame_, time))
     {
-      ROS_ERROR("Cannot get transform at time %f", time.toSec());
+      // RCLCPP_ERROR("Cannot get transform at time %f", time.toSec());
       return;
     }
     try {
@@ -488,17 +487,17 @@ namespace estimation
   }
 
   // get filter posterior at time 'time' as Stamped Transform
-  void OdomEstimation::getEstimate(Time time, geometry_msgs::TransformStamped& estimate)
+  void OdomEstimation::getEstimate(Time time, geometry_msgs::msg::TransformStamped& estimate)
   {
     if (!tf_buffer_->canTransform(hidden_output_frame_, base_footprint_frame_, time))
     {
-      ROS_ERROR("Cannot get transform at time %f", time.toSec());
+      // RCLCPP_ERROR("Cannot get transform at time %f", time.toSec());
       return;
     }
     try {
       estimate = tf_buffer_->lookupTransform(hidden_output_frame_, base_footprint_frame_, time);
     } catch(tf2::TransformException &ex) {
-      std::cout << "ERROR (lookupTransform) - OdomEstimation::getEstimate(Time time, geometry_msgs::TransformStamped& estimate)" << std::endl;
+      std::cout << "ERROR (lookupTransform) - OdomEstimation::getEstimate(Time time, geometry_msgs::msg::TransformStamped& estimate)" << std::endl;
     }
 
     // replace hidden output frame with real
@@ -506,19 +505,19 @@ namespace estimation
   }
 
   // get most recent filter posterior as PoseWithCovarianceStamped
-  void OdomEstimation::getEstimate(geometry_msgs::PoseWithCovarianceStamped& estimate)
+  void OdomEstimation::getEstimate(geometry_msgs::msg::PoseWithCovarianceStamped& estimate)
   {
     // pose
-    geometry_msgs::TransformStamped tmp;
-    if (!tf_buffer_->canTransform(hidden_output_frame_, base_footprint_frame_, ros::Time()))
+    geometry_msgs::msg::TransformStamped tmp;
+    if (!tf_buffer_->canTransform(hidden_output_frame_, base_footprint_frame_, Time()))
     {
-      ROS_ERROR("Cannot get transform at time %f", 0.0);
+      // RCLCPP_ERROR("Cannot get transform at time %f", 0.0);
       return;
     }
     try {
-      tmp = tf_buffer_->lookupTransform(hidden_output_frame_, base_footprint_frame_, ros::Time());
+      tmp = tf_buffer_->lookupTransform(hidden_output_frame_, base_footprint_frame_, Time());
     } catch(tf2::TransformException &ex) {
-      std::cout << "ERROR (lookupTransform) - OdomEstimation::getEstimate(geometry_msgs::PoseWithCovarianceStamped& estimate)" << std::endl;
+      std::cout << "ERROR (lookupTransform) - OdomEstimation::getEstimate(geometry_msgs::msg::PoseWithCovarianceStamped& estimate)" << std::endl;
     } 
     
     estimate.pose.pose.position.x = tmp.transform.translation.x;
@@ -553,7 +552,7 @@ namespace estimation
   }
 
   // decompose Transform into x,y,z,Rx,Ry,Rz
-  void OdomEstimation::decomposeTransform(const geometry_msgs::TransformStamped& trans, 
+  void OdomEstimation::decomposeTransform(const geometry_msgs::msg::TransformStamped& trans, 
 					   double& x, double& y, double&z, double&Rx, double& Ry, double& Rz)
   {
     tf2::Transform T;

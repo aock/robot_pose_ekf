@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
     <name>robot_pose_ekf</name>
     <version>1.15.0</version>
@@ -6,38 +8,36 @@
         The Robot Pose EKF package is used to estimate the 3D pose of a robot, based on (partial) pose measurements coming from different sources. It uses an extended Kalman filter with a 6D model (3D position and 3D orientation) to combine measurements from wheel odometry, IMU sensor and visual odometry. The basic idea is to offer loosely coupled integration with different sensors, where sensor signals are received as ROS messages.
 
     </description>
-    <author>Wim Meeussen</author>
     <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
     <license>BSD</license>
     <url>http://wiki.ros.org/robot_pose_ekf</url>
+    <author>Wim Meeussen</author>
 
-    <buildtool_depend version_gte="0.5.68">catkin</buildtool_depend>
 
-    <build_depend>message_generation</build_depend>
-    <build_depend>roscpp</build_depend>
-    <build_depend condition="$ROS_DISTRO != noetic">bfl</build_depend>
-    <build_depend condition="$ROS_DISTRO == noetic">liborocos-bfl-dev</build_depend>
-    <build_depend>std_msgs</build_depend>
-    <build_depend>geometry_msgs</build_depend>
-    <build_depend>sensor_msgs</build_depend>
-    <build_depend>nav_msgs</build_depend>
-    <build_depend>tf2</build_depend>
-    <build_depend>tf2_ros</build_depend>
-    <build_depend>tf2_geometry_msgs</build_depend>
-    <build_depend>message_generation</build_depend>
+    <buildtool_depend>ament_cmake</buildtool_depend>
+    <buildtool_depend>builtin_interfaces</buildtool_depend>
+    <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
-    <exec_depend>message_runtime</exec_depend>
-    <exec_depend>roscpp</exec_depend>
-    <exec_depend condition="$ROS_DISTRO != noetic">bfl</exec_depend>
-    <exec_depend condition="$ROS_DISTRO == noetic">liborocos-bfl-dev</exec_depend>
-    <exec_depend>std_msgs</exec_depend>
-    <exec_depend>geometry_msgs</exec_depend>
-    <exec_depend>sensor_msgs</exec_depend>
-    <exec_depend>nav_msgs</exec_depend>
-    <exec_depend>tf2</exec_depend>
-    <exec_depend>tf2_ros</exec_depend>
-    <exec_depend>tf2_geometry_msgs</exec_depend>
+    <depend>rclcpp</depend>
+    <depend>liborocos-bfl-dev</depend>
+    <depend>std_msgs</depend>
+    <depend>geometry_msgs</depend>
+    <depend>sensor_msgs</depend>
+    <depend>nav_msgs</depend>
+    <depend>tf2</depend>
+    <depend>tf2_ros</depend>
+    <depend>tf2_geometry_msgs</depend>
+
+    <exec_depend>rosidl_default_runtime</exec_depend>
 
     <test_depend>rosbag</test_depend>
     <test_depend>rostest</test_depend>
+    <test_depend>ament_lint_auto</test_depend>
+    <test_depend>ament_lint_common</test_depend>
+
+    <member_of_group>rosidl_interface_packages</member_of_group>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+      </export>
 </package>
